@@ -24,7 +24,7 @@ python -m http.server 8000
 
 - **AI 판결**: 브라우저는 Anthropic을 직접 호출하지 않고 Supabase Edge Function `verdict`(`supabase/functions/verdict`)를 호출합니다. 이 함수 안에서만 `ANTHROPIC_API_KEY` secret을 읽어 Anthropic API를 호출하므로, 키는 클라이언트에 전혀 노출되지 않습니다. 사용자가 API 키를 따로 입력할 필요가 없습니다.
 - **판결 기록(마이페이지)**: Supabase(Postgres)의 `verdict_records` 테이블에 저장됩니다. Supabase 프로젝트 URL과 공개용 anon 키는 `app.js`에 하드코딩되어 있습니다(anon 키는 공개돼도 되는 값입니다).
-- **모델 선택**: 이 브라우저의 `localStorage`에만 저장되는 단순 설정값입니다.
+- **모델**: `claude-haiku-4-5`로 고정되어 있습니다(`supabase/functions/verdict`에서 서버 측으로 강제). 클라이언트에는 모델을 고를 수 있는 UI가 없습니다.
 
 ## ⚠️ 보안 안내 (반드시 읽어주세요)
 

@@ -4,7 +4,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const TIMEOUT_MS = 15000;
-const ALLOWED_MODELS = ["claude-sonnet-5", "claude-haiku-4-5"];
+const MODEL = "claude-haiku-4-5";
 
 const SYSTEM_PROMPT = `너는 소비 재판을 진행하는 AI 판사 시스템이다. 사용자가 제시한 소비 건에 대해 검사(기소), 변호인(변호), 판사 세 관점을 모두 생성해 판결한다.
 
@@ -64,9 +64,9 @@ function buildUserContent({ itemName, price, category, reason }) {
   return lines.join("\n");
 }
 
-function buildRequestBody({ itemName, price, category, reason, model }) {
+function buildRequestBody({ itemName, price, category, reason }) {
   return {
-    model,
+    model: MODEL,
     max_tokens: 1024,
     system: SYSTEM_PROMPT,
     messages: [
@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "invalid_input", message: "요청 형식이 올바르지 않아요." }, 400);
   }
 
-  const { itemName, price, category, reason, model } = payload || {};
+  const { itemName, price, category, reason } = payload || {};
 
   if (typeof itemName !== "string" || itemName.trim() === "" || typeof price !== "number" || !Number.isFinite(price) || price <= 0) {
     return jsonResponse({ error: "invalid_input", message: "품목명과 가격을 확인해주세요." }, 400);
@@ -113,7 +113,6 @@ Deno.serve(async (req) => {
     price,
     category: typeof category === "string" ? category : "",
     reason: typeof reason === "string" ? reason : "",
-    model: ALLOWED_MODELS.includes(model) ? model : ALLOWED_MODELS[0],
   });
 
   const controller = new AbortController();

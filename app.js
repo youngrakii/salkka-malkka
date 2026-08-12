@@ -138,55 +138,8 @@ const Validation = (() => {
   return { validatePrice, validateItemName };
 })();
 
-// ===== settings.js: 모델 설정 관리 =====
-const Settings = (() => {
-  const SETTINGS_KEY = "sojuban.settings.v1";
-
-  function load() {
-    try {
-      const raw = localStorage.getItem(SETTINGS_KEY);
-      if (!raw) return { model: "claude-sonnet-5" };
-      const parsed = JSON.parse(raw);
-      return { model: parsed.model || "claude-sonnet-5" };
-    } catch (e) {
-      return { model: "claude-sonnet-5" };
-    }
-  }
-
-  function save(settings) {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-  }
-
-  function open() {
-    const modal = document.getElementById("settingsModal");
-    const current = load();
-    document.getElementById("modelSelect").value = current.model;
-    modal.hidden = false;
-  }
-
-  function close() {
-    document.getElementById("settingsModal").hidden = true;
-  }
-
-  function wireUp() {
-    document.getElementById("openSettingsBtn").addEventListener("click", open);
-
-    document.querySelectorAll("[data-close-modal]").forEach((el) => {
-      el.addEventListener("click", close);
-    });
-
-    document.getElementById("saveSettingsBtn").addEventListener("click", () => {
-      const model = document.getElementById("modelSelect").value;
-      save({ model });
-      close();
-    });
-  }
-
-  return { load, save, open, close, wireUp };
-})();
-
 // ===== apiClient.js: Supabase Edge Function(verdict) 호출 래퍼 =====
-// AI 판사 프롬프트/스키마와 Anthropic 호출은 supabase/functions/verdict에서 서버 측으로 처리한다.
+// AI 판사 프롬프트/스키마, 모델 선택(Claude Haiku 4.5 고정), Anthropic 호출은 supabase/functions/verdict에서 서버 측으로 처리한다.
 const ApiClient = (() => {
   const API_URL = `${SUPABASE_URL}/functions/v1/verdict`;
   const TIMEOUT_MS = 15000;
@@ -199,8 +152,7 @@ const ApiClient = (() => {
   }
 
   async function requestVerdict(caseInput) {
-    const settings = Settings.load();
-    const body = { ...caseInput, model: settings.model };
+    const body = caseInput;
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -426,7 +378,7 @@ const TrialView = (() => {
         punchlineQuote: verdict.punchlineQuote,
         savingsAmount,
         alternativeSuggestion: verdict.alternativeSuggestion,
-        modelUsed: Settings.load().model,
+        modelUsed: apiResponse.model,
       };
 
       await Storage.addRecord(record);
@@ -776,7 +728,6 @@ const ShareCard = (() => {
 // ===== app.js 본체: 부트스트랩 - 모든 모듈 초기화 및 이벤트 연결 =====
 document.addEventListener("DOMContentLoaded", () => {
   Router.wireUp();
-  Settings.wireUp();
   HomeView.wireUp();
   TrialView.wireUp();
   ResultView.wireUp();
