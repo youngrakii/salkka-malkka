@@ -266,39 +266,21 @@ h3 {
   -webkit-text-fill-color: transparent;
 }
 
-/* 첫 방문 온보딩 카드 */
-.onboarding-card {
-  background: var(--color-surface-alt);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 18px 20px;
-  margin-bottom: 26px;
-}
-
-.onboarding-card[hidden] {
-  display: none;
-}
-
-.onboarding-card__title {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  margin-bottom: 12px;
-}
-
+/* 온보딩(첫 방문자 설명) 화면의 진행 순서 목록 */
 .onboarding-steps {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-top: 28px;
+  margin-bottom: 30px;
 }
 
 .onboarding-steps li {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 0.85rem;
+  gap: 12px;
+  font-size: 0.92rem;
   color: var(--color-muted);
 }
 

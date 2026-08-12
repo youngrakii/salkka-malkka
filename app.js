@@ -277,7 +277,7 @@ const VerdictParser = (() => {
 
 // ===== router.js: 상태 기반 화면 전환 라우터 =====
 const Router = (() => {
-  const VIEW_IDS = ["home", "trial", "result", "history"];
+  const VIEW_IDS = ["intro", "home", "trial", "result", "history"];
 
   function showView(name) {
     VIEW_IDS.forEach((id) => {
@@ -302,6 +302,24 @@ const Router = (() => {
   }
 
   return { showView, wireUp };
+})();
+
+// ===== introView.js: 첫 방문자 온보딩(설명) 화면 로직 =====
+const IntroView = (() => {
+  const ONBOARDING_SEEN_KEY = "sojuban.onboardingSeen.v1";
+
+  function hasSeenOnboarding() {
+    return Boolean(localStorage.getItem(ONBOARDING_SEEN_KEY));
+  }
+
+  function wireUp() {
+    document.getElementById("introConfirmBtn").addEventListener("click", () => {
+      localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
+      Router.showView("home");
+    });
+  }
+
+  return { hasSeenOnboarding, wireUp };
 })();
 
 // ===== homeView.js: 홈/입력 화면 로직 =====
@@ -358,24 +376,7 @@ const HomeView = (() => {
     inputEl.setSelectionRange(newPos, newPos);
   }
 
-  // 처음 방문한 사용자에게만 진행 순서를 보여준다. "확인했어요"를 누르면 다시 보이지 않는다.
-  const ONBOARDING_SEEN_KEY = "sojuban.onboardingSeen.v1";
-
-  function initOnboarding() {
-    const card = document.getElementById("onboardingCard");
-    if (localStorage.getItem(ONBOARDING_SEEN_KEY)) {
-      card.hidden = true;
-      return;
-    }
-    document.getElementById("onboardingDismissBtn").addEventListener("click", () => {
-      localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
-      card.hidden = true;
-    });
-  }
-
   function wireUp() {
-    initOnboarding();
-
     document.getElementById("priceInput").addEventListener("input", (e) => {
       formatPriceInput(e.target);
     });
@@ -796,10 +797,11 @@ const ShareCard = (() => {
 // ===== app.js 본체: 부트스트랩 - 모든 모듈 초기화 및 이벤트 연결 =====
 document.addEventListener("DOMContentLoaded", () => {
   Router.wireUp();
+  IntroView.wireUp();
   HomeView.wireUp();
   TrialView.wireUp();
   ResultView.wireUp();
   HistoryView.wireUp();
 
-  Router.showView("home");
+  Router.showView(IntroView.hasSeenOnboarding() ? "home" : "intro");
 });
