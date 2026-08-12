@@ -107,6 +107,10 @@ const Storage = (() => {
 
 // ===== validation.js: 입력 검증 규칙 =====
 const Validation = (() => {
+  const MAX_PRICE = 1_000_000_000_000_000; // 1000조원 — 농담 삼아 큰 금액을 적어도 저장/판결에 문제 없는 상한
+  const MAX_ITEM_NAME_LENGTH = 60;
+  const MAX_REASON_LENGTH = 300;
+
   function validatePrice(rawInput) {
     const cleaned = String(rawInput ?? "").trim().replace(/,/g, "");
 
@@ -124,6 +128,10 @@ const Validation = (() => {
       return { valid: false, error: "가격은 0보다 큰 값이어야 해요." };
     }
 
+    if (num > MAX_PRICE) {
+      return { valid: false, error: `가격이 너무 커요. ${MAX_PRICE.toLocaleString("ko-KR")}원 이하로 입력해주세요.` };
+    }
+
     return { valid: true, value: Math.round(num) };
   }
 
@@ -132,10 +140,21 @@ const Validation = (() => {
     if (trimmed === "") {
       return { valid: false, error: "품목명을 입력해주세요." };
     }
+    if (trimmed.length > MAX_ITEM_NAME_LENGTH) {
+      return { valid: false, error: `품목명은 ${MAX_ITEM_NAME_LENGTH}자 이하로 입력해주세요.` };
+    }
     return { valid: true, value: trimmed };
   }
 
-  return { validatePrice, validateItemName };
+  function validateReason(rawInput) {
+    const trimmed = String(rawInput ?? "").trim();
+    if (trimmed.length > MAX_REASON_LENGTH) {
+      return { valid: false, error: `구매 이유는 ${MAX_REASON_LENGTH}자 이하로 입력해주세요.` };
+    }
+    return { valid: true, value: trimmed };
+  }
+
+  return { validatePrice, validateItemName, validateReason, MAX_PRICE };
 })();
 
 // ===== apiClient.js: Supabase Edge Function(verdict) 호출 래퍼 =====
@@ -179,16 +198,26 @@ const ApiClient = (() => {
     }
 
     if (!response.ok) {
+      let errorBody = null;
+      try {
+        errorBody = await response.json();
+      } catch (e) {
+        // 응답 본문이 JSON이 아니면 아래 기본 메시지를 사용한다.
+      }
+
+      if (response.status === 400) {
+        throw new ApiClientError(errorBody?.message || "입력값을 확인해주세요.", "invalid_input");
+      }
       if (response.status === 500) {
-        throw new ApiClientError("서버 설정에 문제가 있어요. 관리자에게 문의해주세요.", "server_misconfigured");
+        throw new ApiClientError(errorBody?.message || "서버 설정에 문제가 있어요. 관리자에게 문의해주세요.", "server_misconfigured");
       }
       if (response.status === 429) {
         throw new ApiClientError("요청이 너무 많아요. 잠시 후 다시 시도해주세요.", "rate_limit");
       }
       if (response.status >= 500) {
-        throw new ApiClientError("Claude 서버에 문제가 생겼어요. 잠시 후 다시 시도해주세요.", "server");
+        throw new ApiClientError(errorBody?.message || "Claude 서버에 문제가 생겼어요. 잠시 후 다시 시도해주세요.", "server");
       }
-      throw new ApiClientError("알 수 없는 오류가 발생했어요.", "unknown");
+      throw new ApiClientError(errorBody?.message || "알 수 없는 오류가 발생했어요.", "unknown");
     }
 
     const data = await response.json();
@@ -281,7 +310,7 @@ const HomeView = (() => {
     const itemNameRaw = document.getElementById("itemNameInput").value;
     const priceRaw = document.getElementById("priceInput").value;
     const category = document.getElementById("categoryInput").value;
-    const reason = document.getElementById("reasonInput").value.trim();
+    const reasonRaw = document.getElementById("reasonInput").value;
 
     const priceErrorEl = document.getElementById("priceError");
     priceErrorEl.textContent = "";
@@ -298,11 +327,17 @@ const HomeView = (() => {
       return null;
     }
 
+    const reasonCheck = Validation.validateReason(reasonRaw);
+    if (!reasonCheck.valid) {
+      alert(reasonCheck.error);
+      return null;
+    }
+
     return {
       itemName: itemCheck.value,
       price: priceCheck.value,
       category,
-      reason,
+      reason: reasonCheck.value,
     };
   }
 
@@ -312,9 +347,11 @@ const HomeView = (() => {
   }
 
   // 입력 중인 값에 천 단위 콤마를 넣어준다. 커서는 끝에서부터의 거리로 위치를 유지한다.
+  const MAX_PRICE_DIGITS = String(Validation.MAX_PRICE).length;
+
   function formatPriceInput(inputEl) {
     const cursorFromEnd = inputEl.value.length - inputEl.selectionStart;
-    const digitsOnly = inputEl.value.replace(/[^\d]/g, "");
+    const digitsOnly = inputEl.value.replace(/[^\d]/g, "").slice(0, MAX_PRICE_DIGITS);
     const formatted = digitsOnly === "" ? "" : Number(digitsOnly).toLocaleString("ko-KR");
     inputEl.value = formatted;
     const newPos = Math.max(0, formatted.length - cursorFromEnd);

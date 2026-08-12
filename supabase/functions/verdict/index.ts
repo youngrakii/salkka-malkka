@@ -5,6 +5,9 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const TIMEOUT_MS = 15000;
 const MODEL = "claude-haiku-4-5";
+const MAX_PRICE = 1_000_000_000_000_000; // 1000조원 — 클라이언트(app.js)와 동일한 상한
+const MAX_ITEM_NAME_LENGTH = 60;
+const MAX_REASON_LENGTH = 300;
 
 const SYSTEM_PROMPT = `너는 소비 재판을 진행하는 AI 판사 시스템이다. 사용자가 제시한 소비 건에 대해 검사(기소), 변호인(변호), 판사 세 관점을 모두 생성해 판결한다.
 
@@ -108,11 +111,15 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "invalid_input", message: "품목명과 가격을 확인해주세요." }, 400);
   }
 
+  if (price > MAX_PRICE) {
+    return jsonResponse({ error: "invalid_input", message: `가격이 너무 커요. ${MAX_PRICE.toLocaleString("ko-KR")}원 이하로 입력해주세요.` }, 400);
+  }
+
   const requestBody = buildRequestBody({
-    itemName,
+    itemName: itemName.trim().slice(0, MAX_ITEM_NAME_LENGTH),
     price,
-    category: typeof category === "string" ? category : "",
-    reason: typeof reason === "string" ? reason : "",
+    category: typeof category === "string" ? category.slice(0, 20) : "",
+    reason: typeof reason === "string" ? reason.trim().slice(0, MAX_REASON_LENGTH) : "",
   });
 
   const controller = new AbortController();
