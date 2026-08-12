@@ -138,21 +138,18 @@ const Validation = (() => {
   return { validatePrice, validateItemName };
 })();
 
-// ===== settings.js: API 키 / 모델 설정 관리 =====
+// ===== settings.js: 모델 설정 관리 =====
 const Settings = (() => {
   const SETTINGS_KEY = "sojuban.settings.v1";
 
   function load() {
     try {
       const raw = localStorage.getItem(SETTINGS_KEY);
-      if (!raw) return { apiKey: "", model: "claude-sonnet-5" };
+      if (!raw) return { model: "claude-sonnet-5" };
       const parsed = JSON.parse(raw);
-      return {
-        apiKey: parsed.apiKey || "",
-        model: parsed.model || "claude-sonnet-5",
-      };
+      return { model: parsed.model || "claude-sonnet-5" };
     } catch (e) {
-      return { apiKey: "", model: "claude-sonnet-5" };
+      return { model: "claude-sonnet-5" };
     }
   }
 
@@ -160,19 +157,9 @@ const Settings = (() => {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
   }
 
-  function clearApiKey() {
-    const current = load();
-    save({ ...current, apiKey: "" });
-  }
-
-  function hasApiKey() {
-    return Boolean(load().apiKey);
-  }
-
   function open() {
     const modal = document.getElementById("settingsModal");
     const current = load();
-    document.getElementById("apiKeyInput").value = current.apiKey;
     document.getElementById("modelSelect").value = current.model;
     modal.hidden = false;
   }
@@ -189,107 +176,30 @@ const Settings = (() => {
     });
 
     document.getElementById("saveSettingsBtn").addEventListener("click", () => {
-      const apiKey = document.getElementById("apiKeyInput").value.trim();
       const model = document.getElementById("modelSelect").value;
-      save({ apiKey, model });
+      save({ model });
       close();
     });
-
-    document.getElementById("clearApiKeyBtn").addEventListener("click", () => {
-      clearApiKey();
-      document.getElementById("apiKeyInput").value = "";
-    });
   }
 
-  return { load, save, clearApiKey, hasApiKey, open, close, wireUp };
+  return { load, save, open, close, wireUp };
 })();
 
-// ===== promptBuilder.js: AI 판사 프롬프트 및 응답 JSON 스키마 정의 =====
-const PromptBuilder = (() => {
-  const SYSTEM_PROMPT = `너는 소비 재판을 진행하는 AI 판사 시스템이다. 사용자가 제시한 소비 건에 대해 검사(기소), 변호인(변호), 판사 세 관점을 모두 생성해 판결한다.
-
-- 검사 논고와 변호인 변론은 둘 다 실질적인 근거를 가진 주장이어야 한다. 한쪽을 허수아비로 만들지 마라.
-- 최종 판결은 검사와 변호인의 논리를 실제로 저울질한 결과여야 하며, 기계적으로 유죄/무죄를 정하지 마라.
-- 어조는 한국어로, 재치있고 팩폭(사실을 근거로 날카롭게 지적하는) 스타일을 쓰되, 인신공격이나 모욕은 하지 마라.
-- punchline_quote는 한 문장으로 강렬하게 마무리하는 말이다.
-- 유죄일 경우에만 alternative_suggestion을 채우고, 무죄일 경우 null로 둔다.`;
-
-  const VERDICT_SCHEMA = {
-    type: "object",
-    properties: {
-      case_summary: { type: "string", description: "사건 개요 - 1~2문장으로 이 소비 건을 중립적으로 요약" },
-      prosecution_argument: { type: "string", description: "검사 논고 - 이 소비가 낭비인 이유" },
-      defense_argument: { type: "string", description: "변호인 변론 - 이 소비가 합리적/필요한 이유" },
-      verdict: { type: "string", enum: ["무죄", "유죄"] },
-      verdict_reasoning: { type: "string", description: "최종 판결 요지, 2~4문장" },
-      punchline_quote: { type: "string", description: "한 줄 팩폭 명언" },
-      alternative_suggestion: {
-        type: ["string", "null"],
-        description: "유죄일 때 대안 제안. 무죄면 null",
-      },
-    },
-    required: [
-      "case_summary",
-      "prosecution_argument",
-      "defense_argument",
-      "verdict",
-      "verdict_reasoning",
-      "punchline_quote",
-      "alternative_suggestion",
-    ],
-    additionalProperties: false,
-  };
-
-  function buildUserContent({ itemName, price, category, reason }) {
-    const lines = [
-      `품목명: ${itemName}`,
-      `가격: ${price.toLocaleString("ko-KR")}원`,
-    ];
-    if (category) lines.push(`카테고리: ${category}`);
-    if (reason) lines.push(`구매 이유/변명: ${reason}`);
-    lines.push("", "위 소비 건에 대해 재판을 진행해줘.");
-    return lines.join("\n");
-  }
-
-  function buildRequestBody({ itemName, price, category, reason, model }) {
-    return {
-      model,
-      max_tokens: 1024,
-      system: SYSTEM_PROMPT,
-      messages: [
-        { role: "user", content: buildUserContent({ itemName, price, category, reason }) },
-      ],
-      output_config: {
-        format: {
-          type: "json_schema",
-          schema: VERDICT_SCHEMA,
-        },
-      },
-    };
-  }
-
-  return { buildRequestBody };
-})();
-
-// ===== apiClient.js: Claude Messages API 호출 래퍼 =====
+// ===== apiClient.js: /api/verdict (Vercel 서버리스 함수) 호출 래퍼 =====
 const ApiClient = (() => {
-  const API_URL = "https://api.anthropic.com/v1/messages";
+  const API_URL = "/api/verdict";
   const TIMEOUT_MS = 15000;
 
   class ApiClientError extends Error {
     constructor(message, code) {
       super(message);
-      this.code = code; // "no_key" | "timeout" | "network" | "auth" | "rate_limit" | "server" | "unknown"
+      this.code = code; // "timeout" | "network" | "server_misconfigured" | "rate_limit" | "server" | "unknown"
     }
   }
 
   async function requestVerdict(caseInput) {
     const settings = Settings.load();
-    if (!settings.apiKey) {
-      throw new ApiClientError("API 키가 설정되지 않았어요. 설정에서 먼저 등록해주세요.", "no_key");
-    }
-
-    const body = PromptBuilder.buildRequestBody({ ...caseInput, model: settings.model });
+    const body = { ...caseInput, model: settings.model };
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -298,12 +208,7 @@ const ApiClient = (() => {
     try {
       response = await fetch(API_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": settings.apiKey,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
         signal: controller.signal,
       });
@@ -317,8 +222,8 @@ const ApiClient = (() => {
     }
 
     if (!response.ok) {
-      if (response.status === 401) {
-        throw new ApiClientError("API 키가 올바르지 않아요. 설정을 확인해주세요.", "auth");
+      if (response.status === 500) {
+        throw new ApiClientError("서버 설정에 문제가 있어요. 관리자에게 문의해주세요.", "server_misconfigured");
       }
       if (response.status === 429) {
         throw new ApiClientError("요청이 너무 많아요. 잠시 후 다시 시도해주세요.", "rate_limit");
@@ -452,12 +357,6 @@ const HomeView = (() => {
   function wireUp() {
     document.getElementById("caseForm").addEventListener("submit", (e) => {
       e.preventDefault();
-
-      if (!Settings.hasApiKey()) {
-        alert("먼저 설정에서 Anthropic API 키를 등록해주세요.");
-        Settings.open();
-        return;
-      }
 
       const caseInput = readForm();
       if (!caseInput) return;
@@ -879,9 +778,4 @@ document.addEventListener("DOMContentLoaded", () => {
   HistoryView.wireUp();
 
   Router.showView("home");
-
-  if (!Settings.hasApiKey()) {
-    // 최초 방문 시 설정 화면으로 안내 (강제 이동은 아니고 안내만)
-    console.info("API 키가 설정되지 않았습니다. 설정에서 Anthropic API 키를 등록해주세요.");
-  }
 });
