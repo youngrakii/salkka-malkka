@@ -1,0 +1,14 @@
+# 이 저장소는 "살까 말까?" 앱 관련 파일만 추적한다.
+# 폴더 내 다른 무관한 문서/데이터 파일은 커밋하지 않는다.
+*
+!.gitignore
+!index.html
+!style.css
+!app.js
+!README.md
+!PRD.md
+!CLAUDE.md
+
+# 민감 정보 (반드시 제외)
+.env
+.env.*

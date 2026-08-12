@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>살까 말까?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <button class="app-header__logo" data-nav="home">⚖️ 살까 말까?</button>
+  <nav class="app-header__nav">
+    <button data-nav="history">마이페이지</button>
+    <button id="openSettingsBtn">설정</button>
+  </nav>
+</header>
+
+<main id="app">
+
+  <!-- 1. 홈/입력 화면 -->
+  <section id="view-home" class="view">
+    <div class="card card--form">
+      <h1>사고 싶은 걸 말해보세요</h1>
+      <p class="muted">AI 판사가 이 소비의 죄를 묻습니다.</p>
+
+      <form id="caseForm">
+        <label class="field">
+          <span>품목명</span>
+          <input type="text" id="itemNameInput" placeholder="예: 에어팟 프로" required maxlength="60">
+        </label>
+
+        <label class="field">
+          <span>가격 (원)</span>
+          <input type="text" id="priceInput" inputmode="numeric" placeholder="예: 359000" required>
+          <span class="field-error" id="priceError"></span>
+        </label>
+
+        <label class="field">
+          <span>카테고리 (선택)</span>
+          <select id="categoryInput">
+            <option value="">선택 안 함</option>
+            <option value="패션">패션</option>
+            <option value="전자기기">전자기기</option>
+            <option value="식음료">식음료</option>
+            <option value="취미">취미</option>
+            <option value="기타">기타</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>구매 이유 / 변명 (선택)</span>
+          <textarea id="reasonInput" rows="3" placeholder="왜 사고 싶은가요?" maxlength="300"></textarea>
+        </label>
+
+        <button type="submit" class="btn btn--primary btn--block">재판 시작하기</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- 2. 재판 진행 화면 -->
+  <section id="view-trial" class="view">
+    <div class="card card--center">
+      <div class="spinner" aria-hidden="true"></div>
+      <p id="trialStatusText" class="trial-status">판사님 입장 중...</p>
+      <button id="cancelTrialBtn" class="btn btn--ghost">취소</button>
+    </div>
+  </section>
+
+  <!-- 3. 판결 결과 화면 -->
+  <section id="view-result" class="view">
+    <div class="card card--result" id="resultCard">
+      <div class="verdict-badge" id="verdictBadge">-</div>
+      <h2 id="resultItemName"></h2>
+      <p class="muted" id="resultPrice"></p>
+
+      <div class="verdict-section">
+        <h3>사건 개요</h3>
+        <p id="caseSummary"></p>
+      </div>
+      <div class="verdict-section">
+        <h3>검사 논고</h3>
+        <p id="prosecutionArgument"></p>
+      </div>
+      <div class="verdict-section">
+        <h3>변호인 변론</h3>
+        <p id="defenseArgument"></p>
+      </div>
+      <div class="verdict-section verdict-section--final">
+        <h3>최종 판결</h3>
+        <p id="verdictReasoning"></p>
+        <p class="punchline" id="punchlineQuote"></p>
+      </div>
+      <div class="verdict-section" id="savingsSection" hidden>
+        <h3>💰 절약 가능 금액</h3>
+        <p id="savingsAmount"></p>
+        <p class="muted" id="alternativeSuggestion"></p>
+      </div>
+    </div>
+
+    <div class="result-actions">
+      <button id="shareBtn" class="btn">공유하기</button>
+      <button id="retryBtn" class="btn">다시 재판받기</button>
+      <button id="viewHistoryBtn" class="btn btn--primary">기록 보기</button>
+    </div>
+  </section>
+
+  <!-- 4. 마이페이지: 판결 기록 (관심도 순 정렬 + 항목별 체크리스트/메모) -->
+  <section id="view-history" class="view dashboard">
+
+    <div class="dashboard-section">
+      <p class="eyebrow eyebrow--record">판결 기록</p>
+
+      <div class="stats-row" id="statsRow">
+        <div class="stat-card">
+          <span class="stat-card__label">누적 절약액</span>
+          <span class="stat-card__value" id="statTotalSaved">0억원</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card__label">무죄율</span>
+          <span class="stat-card__value" id="statInnocenceRate">0%</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card__label">총 재판 수</span>
+          <span class="stat-card__value" id="statTotalCount">0건</span>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <button class="filter-btn is-active" data-filter="all">전체</button>
+        <button class="filter-btn" data-filter="무죄">무죄</button>
+        <button class="filter-btn" data-filter="유죄">유죄</button>
+      </div>
+
+      <p class="muted history-hint">관심도가 높은 순서로 정렬됩니다. 항목에 마우스를 올리면 체크리스트/메모를 볼 수 있어요.</p>
+
+      <ul id="historyList" class="history-list"></ul>
+      <p id="historyEmptyState" class="muted empty-state" hidden>아직 재판 기록이 없어요. 첫 재판을 시작해보세요!</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- Settings 모달 -->
+<div id="settingsModal" class="modal" hidden>
+  <div class="modal__backdrop" data-close-modal></div>
+  <div class="modal__panel">
+    <h2>설정</h2>
+
+    <div class="warning-banner">
+      <strong>⚠️ 개인 실습용 보안 안내</strong>
+      <ul>
+        <li>API 키는 이 브라우저의 localStorage에만 저장되며, Anthropic API 서버로만 전송됩니다.</li>
+        <li>이 기기/브라우저에 접근 가능한 사람은 개발자 도구(DevTools)로 키를 볼 수 있습니다.</li>
+        <li>이 앱은 개인 실습 목적입니다. 이 키가 포함된 상태로 다른 사람에게 배포하거나 공개 호스팅하지 마세요.</li>
+      </ul>
+    </div>
+
+    <label class="field">
+      <span>Anthropic API 키</span>
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-...">
+    </label>
+
+    <label class="field">
+      <span>모델</span>
+      <select id="modelSelect">
+        <option value="claude-sonnet-5">Claude Sonnet 5 (균형)</option>
+        <option value="claude-haiku-4-5">Claude Haiku 4.5 (빠름)</option>
+      </select>
+    </label>
+
+    <div class="modal__actions">
+      <button id="clearApiKeyBtn" class="btn btn--ghost">키 삭제</button>
+      <button id="saveSettingsBtn" class="btn btn--primary">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 공유 카드 (오프스크린, html2canvas 캡처용) -->
+<div id="shareCardTemplate" class="share-card">
+  <div class="share-card__badge" id="shareVerdictBadge">-</div>
+  <h2 id="shareItemName"></h2>
+  <p id="sharePrice"></p>
+  <p class="share-card__reasoning" id="shareVerdictReasoning"></p>
+  <p class="share-card__punchline" id="sharePunchlineQuote"></p>
+  <p class="share-card__footer">살까 말까?</p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+</body>
+</html>
