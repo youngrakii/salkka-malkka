@@ -939,6 +939,42 @@ h3 {
   color: var(--dash-accent-blue);
 }
 
+/* 무죄율 기반 "소비 유형" 카드 */
+.persona-card {
+  text-align: center;
+  padding: 28px 20px;
+  margin-bottom: 22px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background:
+    radial-gradient(420px 220px at 50% -20%, rgba(43, 137, 255, 0.22) 0%, rgba(43, 137, 255, 0) 60%),
+    var(--color-surface);
+}
+
+.persona-card__emoji {
+  display: block;
+  font-size: 2.6rem;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.persona-card__type {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  background: linear-gradient(120deg, #ffffff 0%, var(--color-accent) 55%, var(--dash-checklist) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.persona-card__desc {
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
 /* 마이페이지 기능 설명 말풍선 — 기존 레이아웃을 밀어내지 않도록 절대 위치로 양옆 여백에 띄운다 */
 .stats-row,
 .filter-row,

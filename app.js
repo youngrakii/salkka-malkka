@@ -552,6 +552,35 @@ const HistoryView = (() => {
     { id: "c5", label: "광고나 세일 문구에 홀린 건 아닌가요?" },
   ];
 
+  // 무죄율 기준 "소비 유형" — 높은 minRate부터 순서대로 검사한다
+  const PERSONA_MIN_TRIALS = 3;
+  const PERSONA_TIERS = [
+    { minRate: 0.8, emoji: "🧘", type: "소비 득도자", desc: "웬만한 유혹엔 흔들리지 않는 초연한 소비자예요." },
+    { minRate: 0.6, emoji: "⚖️", type: "균형잡힌 시민", desc: "필요와 욕망 사이에서 꽤 합리적으로 줄타기하고 있어요." },
+    { minRate: 0.4, emoji: "🎢", type: "밀당의 고수", desc: "살까 말까 고민은 하는데... 결국 반은 지고 있어요." },
+    { minRate: 0.2, emoji: "🔥", type: "지름신 단골손님", desc: "지름신이 이 재판정 VIP석을 예약해뒀어요." },
+    { minRate: 0, emoji: "🚨", type: "상습 지름범", desc: "검사도 이제 이 사건엔 신물이 났어요. 변호인 접견 자주 하세요." },
+  ];
+
+  function renderPersona(records) {
+    const stats = Storage.computeStats(records);
+    const emojiEl = document.getElementById("personaEmoji");
+    const typeEl = document.getElementById("personaType");
+    const descEl = document.getElementById("personaDesc");
+
+    if (stats.total < PERSONA_MIN_TRIALS) {
+      emojiEl.textContent = "🔍";
+      typeEl.textContent = "아직 미공개";
+      descEl.textContent = `재판을 ${PERSONA_MIN_TRIALS}번 이상 받으면 당신의 소비 유형이 공개돼요. (현재 ${stats.total}번)`;
+      return;
+    }
+
+    const persona = PERSONA_TIERS.find((tier) => stats.innocenceRate >= tier.minRate);
+    emojiEl.textContent = persona.emoji;
+    typeEl.textContent = persona.type;
+    descEl.textContent = persona.desc;
+  }
+
   function formatWon(amount) {
     return Math.round(amount).toLocaleString("ko-KR") + "원";
   }
@@ -791,6 +820,7 @@ const HistoryView = (() => {
 
   async function render() {
     const records = await Storage.loadRecords();
+    renderPersona(records);
     renderStats(records);
     renderCategoryStats(records);
     renderList(records);
