@@ -311,7 +311,21 @@ const HomeView = (() => {
     document.getElementById("priceError").textContent = "";
   }
 
+  // 입력 중인 값에 천 단위 콤마를 넣어준다. 커서는 끝에서부터의 거리로 위치를 유지한다.
+  function formatPriceInput(inputEl) {
+    const cursorFromEnd = inputEl.value.length - inputEl.selectionStart;
+    const digitsOnly = inputEl.value.replace(/[^\d]/g, "");
+    const formatted = digitsOnly === "" ? "" : Number(digitsOnly).toLocaleString("ko-KR");
+    inputEl.value = formatted;
+    const newPos = Math.max(0, formatted.length - cursorFromEnd);
+    inputEl.setSelectionRange(newPos, newPos);
+  }
+
   function wireUp() {
+    document.getElementById("priceInput").addEventListener("input", (e) => {
+      formatPriceInput(e.target);
+    });
+
     document.getElementById("caseForm").addEventListener("submit", (e) => {
       e.preventDefault();
 
