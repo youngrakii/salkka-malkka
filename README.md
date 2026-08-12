@@ -18,31 +18,22 @@ python -m http.server 8000
 
 그 후 브라우저에서 `http://localhost:8000` (또는 안내된 포트)에 접속하세요.
 
-**`index.html`을 직접 더블클릭해서 열어도 대부분의 브라우저에서 동작합니다.** 다만 브라우저의 `file://` 보안 정책에 따라 API 호출이 막히는 경우가 있으니, 문제가 생기면 위 정적 서버 방법을 사용하세요.
-
-## 사용 준비
-
-1. 우측 상단 **설정** 버튼 클릭
-2. [Anthropic Console](https://console.anthropic.com/)에서 발급받은 API 키 입력
-3. 사용할 모델 선택 (기본: Claude Sonnet 5)
-4. 저장
+**`index.html`을 직접 더블클릭해서 열어도 대부분의 브라우저에서 동작합니다.** AI 판결 호출은 이미 배포된 Supabase Edge Function을 통해 이뤄지므로, 별도 서버 실행 없이 정적 파일만으로 전체 기능(재판 + 기록 저장)이 동작합니다.
 
 ## 데이터 저장 방식
 
-- **AI 판결**: 브라우저에서 Anthropic API를 **직접** 호출합니다 (별도 백엔드 서버 없음).
-- **판결 기록(마이페이지)**: Supabase(Postgres)의 `verdict_records` 테이블에 저장됩니다. Supabase 프로젝트 URL과 공개용 anon 키는 `app.js`에 하드코딩되어 있습니다.
-- **Anthropic API 키**: 여전히 이 브라우저의 `localStorage`에만 저장되며 서버로 전송되지 않습니다.
+- **AI 판결**: 브라우저는 Anthropic을 직접 호출하지 않고 Supabase Edge Function `verdict`(`supabase/functions/verdict`)를 호출합니다. 이 함수 안에서만 `ANTHROPIC_API_KEY` secret을 읽어 Anthropic API를 호출하므로, 키는 클라이언트에 전혀 노출되지 않습니다. 사용자가 API 키를 따로 입력할 필요가 없습니다.
+- **판결 기록(마이페이지)**: Supabase(Postgres)의 `verdict_records` 테이블에 저장됩니다. Supabase 프로젝트 URL과 공개용 anon 키는 `app.js`에 하드코딩되어 있습니다(anon 키는 공개돼도 되는 값입니다).
+- **모델 선택**: 이 브라우저의 `localStorage`에만 저장되는 단순 설정값입니다.
 
 ## ⚠️ 보안 안내 (반드시 읽어주세요)
 
 이 앱은 **개인 실습용 패턴**입니다. 정식 서비스(SaaS)에는 적합하지 않습니다.
 
-- **Anthropic API 키**는 이 브라우저의 localStorage에만 저장됩니다. 이 컴퓨터/브라우저에 접근할 수 있는 사람은 누구나 개발자 도구(DevTools)를 통해 저장된 키를 확인할 수 있습니다.
-- **판결 기록(Supabase)**은 로그인/사용자 구분이 없는 단일 공개 테이블입니다. RLS 정책이 `anon` 키에 대해 읽기/쓰기/수정/삭제를 모두 허용하므로, `app.js`에 노출된 Supabase URL과 anon 키를 아는 사람은 누구나 모든 사용자의 기록을 보거나 지울 수 있습니다.
-- **이 앱을 그대로 배포하거나, API 키가 저장된 브라우저 프로필 또는 Supabase 프로젝트 자격 증명을 다른 사람과 공유하지 마세요.**
-- 실제 서비스를 만들 때는 Supabase Auth로 사용자를 구분하고 사용자별 RLS 정책을 적용하며, Anthropic API 키는 반드시 백엔드에서 관리하세요.
-
-키를 삭제하려면 설정 화면의 "키 삭제" 버튼을 사용하세요.
+- **`verdict` Edge Function은 로그인/사용자별 인증이 없는 엔드포인트**입니다. Supabase anon 키(공개용, `app.js`에 노출됨)만 있으면 누구나 호출할 수 있고, 그때마다 프로젝트 소유자의 Anthropic API 키로 과금됩니다. 요청량 제한이 없으므로, 이 앱을 다수에게 공개 배포하지 마세요.
+- **판결 기록(Supabase)**은 로그인/사용자 구분이 없는 단일 공개 테이블입니다. RLS 정책이 `anon` 키에 대해 읽기/쓰기/수정/삭제를 모두 허용하므로, 노출된 Supabase URL과 anon 키를 아는 사람은 누구나 모든 사용자의 기록을 보거나 지울 수 있습니다.
+- **Anthropic API 키는 Supabase Edge Function의 secret으로만 관리하세요.** (`supabase secrets set ANTHROPIC_API_KEY=...`) 코드에 직접 적지 마세요.
+- 실제 서비스를 만들 때는 Supabase Auth로 사용자를 구분하고 사용자별 RLS 정책을 적용하며, `verdict` 함수에도 인증/요청량 제한을 추가하세요.
 
 ## 기능
 

@@ -12,8 +12,9 @@
 이 폴더에서 웹앱(살까 말까? 등)을 개발할 때 아래 규칙을 따른다.
 
 - **순수 HTML/CSS/JS**만 사용한다. 프레임워크, 빌드 도구(번들러, 트랜스파일러), 패키지 매니저를 도입하지 않는다. (CDN `<script>` 태그로 불러오는 라이브러리는 예외로 허용한다.)
-- **파일은 `index.html`, `style.css`, `app.js` 3개만 유지**한다. CSS와 JS를 여러 파일로 쪼개지 않고 각각 하나의 파일에 모아 작성한다.
-- **데이터는 Supabase(Postgres)에 저장**한다. 클라이언트에서 `supabase-js`(CDN)로 직접 접근하며, 별도의 백엔드 서버(API 서버)는 두지 않는다. 설정값(API 키 등)처럼 기기 로컬에만 있어도 되는 값은 `localStorage`를 계속 사용해도 된다.
+- **프론트엔드 파일은 `index.html`, `style.css`, `app.js` 3개만 유지**한다. CSS와 JS를 여러 파일로 쪼개지 않고 각각 하나의 파일에 모아 작성한다. (클라이언트에 노출되면 안 되는 비밀키를 다루는 코드는 예외로 `supabase/functions/` 아래 Supabase Edge Function으로 둘 수 있다.)
+- **데이터는 Supabase(Postgres)에 저장**한다. 클라이언트에서 `supabase-js`(CDN)로 직접 접근한다. 설정값처럼 기기 로컬에만 있어도 되는 값은 `localStorage`를 계속 사용해도 된다.
+- **Anthropic API 키처럼 노출되면 안 되는 비밀키는 절대 클라이언트 코드/localStorage에 두지 않는다.** Supabase Edge Function(`supabase/functions/verdict`)의 secret(환경변수)로만 다루고, 브라우저는 그 함수를 호출한다.
 
 # 작업 진행 규칙
 

@@ -8,6 +8,10 @@
 !README.md
 !PRD.md
 !CLAUDE.md
+!supabase/
+!supabase/functions/
+!supabase/functions/verdict/
+!supabase/functions/verdict/index.ts
 
 # 민감 정보 (반드시 제외)
 .env
