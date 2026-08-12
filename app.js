@@ -358,7 +358,24 @@ const HomeView = (() => {
     inputEl.setSelectionRange(newPos, newPos);
   }
 
+  // 처음 방문한 사용자에게만 진행 순서를 보여준다. "확인했어요"를 누르면 다시 보이지 않는다.
+  const ONBOARDING_SEEN_KEY = "sojuban.onboardingSeen.v1";
+
+  function initOnboarding() {
+    const card = document.getElementById("onboardingCard");
+    if (localStorage.getItem(ONBOARDING_SEEN_KEY)) {
+      card.hidden = true;
+      return;
+    }
+    document.getElementById("onboardingDismissBtn").addEventListener("click", () => {
+      localStorage.setItem(ONBOARDING_SEEN_KEY, "true");
+      card.hidden = true;
+    });
+  }
+
   function wireUp() {
+    initOnboarding();
+
     document.getElementById("priceInput").addEventListener("input", (e) => {
       formatPriceInput(e.target);
     });
