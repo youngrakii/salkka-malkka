@@ -227,6 +227,79 @@ h3 {
   margin-bottom: 22px;
 }
 
+/* 카테고리별 재판 건수 — 단일 지표(건수) 바 목록, 색은 카테고리를 구분하지 않고 accent 한 가지로 통일 */
+.category-stats {
+  margin-bottom: 22px;
+}
+
+.category-stats[hidden] {
+  display: none;
+}
+
+.category-stats__title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  margin-bottom: 12px;
+}
+
+.category-stats__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.category-stat {
+  display: grid;
+  grid-template-columns: 84px 1fr 40px;
+  align-items: center;
+  gap: 10px;
+}
+
+.category-stat__label {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.category-stat__name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.category-stat__meta {
+  font-size: 0.72rem;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+.category-stat__bar-track {
+  height: 10px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-alt);
+  overflow: hidden;
+}
+
+.category-stat__bar-fill {
+  height: 100%;
+  min-width: 4px;
+  background: var(--color-accent);
+  border-radius: 0 4px 4px 0;
+}
+
+.category-stat__count {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
 .filter-row {
   display: flex;
   gap: 8px;
@@ -264,6 +337,26 @@ h3 {
   background-clip: text;
   color: transparent;
   -webkit-text-fill-color: transparent;
+}
+
+/* 온보딩 화면 설명 문구 — 화려한 그라디언트 + 은은한 반짝임 애니메이션 */
+.intro-tagline {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  background: linear-gradient(120deg, var(--color-accent) 0%, var(--dash-checklist) 35%, var(--dash-watchlist) 65%, var(--color-accent) 100%);
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: taglineShimmer 4s ease-in-out infinite;
+}
+
+@keyframes taglineShimmer {
+  0% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+  100% { background-position: 0% center; }
 }
 
 /* 온보딩(첫 방문자 설명) 화면의 진행 순서 목록 */
@@ -846,10 +939,93 @@ h3 {
   color: var(--dash-accent-blue);
 }
 
-.history-hint {
-  font-family: var(--dash-font);
+/* 마이페이지 기능 설명 말풍선 — 기존 레이아웃을 밀어내지 않도록 절대 위치로 양옆 여백에 띄운다 */
+.stats-row,
+.filter-row,
+.history-list-wrap {
+  position: relative;
+}
+
+.feature-tooltip {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 210px;
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  padding: 12px 30px 12px 14px;
   font-size: 0.8rem;
-  margin-bottom: 14px;
+  line-height: 1.5;
+  color: #23262b;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  z-index: 5;
+}
+
+.feature-tooltip[hidden] {
+  display: none;
+}
+
+.feature-tooltip p {
+  margin: 0;
+}
+
+.feature-tooltip--top {
+  top: 12px;
+  transform: none;
+}
+
+.feature-tooltip--right {
+  left: calc(100% + 20px);
+}
+
+.feature-tooltip--left {
+  right: calc(100% + 20px);
+}
+
+.feature-tooltip--right::after,
+.feature-tooltip--left::after {
+  content: "";
+  position: absolute;
+  top: 20px;
+  width: 12px;
+  height: 12px;
+  background: #ffffff;
+  transform: rotate(45deg);
+}
+
+.feature-tooltip--right::after {
+  left: -6px;
+}
+
+.feature-tooltip--left::after {
+  right: -6px;
+}
+
+.feature-tooltip__close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  font-size: 0.95rem;
+  line-height: 1;
+  color: #666666;
+  transition: background 0.15s ease;
+}
+
+.feature-tooltip__close:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* 양옆에 말풍선을 띄울 여백이 부족한 화면에서는 숨겨서 레이아웃을 침범하지 않게 한다 */
+@media (max-width: 1100px) {
+  .feature-tooltip {
+    display: none;
+  }
 }
 
 /* 판결 항목 안의 입력 요소 (메모) 에 재사용 */

@@ -98,11 +98,24 @@ const Storage = (() => {
     };
   }
 
+  // 카테고리별(패션/전자기기/... , 미선택은 "미분류") 건수·절약액 집계, 건수 내림차순 정렬
+  function computeCategoryStats(records) {
+    const byCategory = new Map();
+    for (const r of records) {
+      const name = r.category && r.category.trim() ? r.category : "미분류";
+      const entry = byCategory.get(name) || { category: name, count: 0, totalSaved: 0 };
+      entry.count += 1;
+      if (r.verdict === "유죄") entry.totalSaved += r.savingsAmount || 0;
+      byCategory.set(name, entry);
+    }
+    return Array.from(byCategory.values()).sort((a, b) => b.count - a.count);
+  }
+
   function createId() {
     return "rec_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
   }
 
-  return { loadRecords, addRecord, deleteRecord, updateRecord, computeStats, createId };
+  return { loadRecords, addRecord, deleteRecord, updateRecord, computeStats, computeCategoryStats, createId };
 })();
 
 // ===== validation.js: 입력 검증 규칙 =====
@@ -567,6 +580,57 @@ const HistoryView = (() => {
     document.getElementById("statTotalCount").textContent = stats.total + "건";
   }
 
+  function renderCategoryStats(records) {
+    const wrap = document.getElementById("categoryStats");
+    const listEl = document.getElementById("categoryStatsList");
+    const categoryStats = Storage.computeCategoryStats(records);
+
+    if (categoryStats.length === 0) {
+      wrap.hidden = true;
+      return;
+    }
+    wrap.hidden = false;
+
+    const maxCount = categoryStats[0].count;
+    listEl.innerHTML = "";
+
+    categoryStats.forEach((stat) => {
+      const li = document.createElement("li");
+      li.className = "category-stat";
+
+      const label = document.createElement("div");
+      label.className = "category-stat__label";
+
+      const name = document.createElement("span");
+      name.className = "category-stat__name";
+      name.textContent = stat.category;
+
+      const meta = document.createElement("span");
+      meta.className = "category-stat__meta";
+      meta.textContent = stat.totalSaved > 0 ? `${formatWon(stat.totalSaved)} 절약` : "절약액 없음";
+
+      label.appendChild(name);
+      label.appendChild(meta);
+
+      const track = document.createElement("div");
+      track.className = "category-stat__bar-track";
+
+      const fill = document.createElement("div");
+      fill.className = "category-stat__bar-fill";
+      fill.style.width = `${Math.round((stat.count / maxCount) * 100)}%`;
+      track.appendChild(fill);
+
+      const count = document.createElement("span");
+      count.className = "category-stat__count";
+      count.textContent = `${stat.count}건`;
+
+      li.appendChild(label);
+      li.appendChild(track);
+      li.appendChild(count);
+      listEl.appendChild(li);
+    });
+  }
+
   function buildDetailPanel(record) {
     const detail = document.createElement("div");
     detail.className = "history-item__detail";
@@ -728,10 +792,28 @@ const HistoryView = (() => {
   async function render() {
     const records = await Storage.loadRecords();
     renderStats(records);
+    renderCategoryStats(records);
     renderList(records);
   }
 
+  // 기능 설명 말풍선: 한 번 닫으면 해당 말풍선만 다음 방문부터 보이지 않는다.
+  function wireFeatureTooltips() {
+    document.querySelectorAll(".feature-tooltip[data-tooltip-key]").forEach((tooltip) => {
+      const key = tooltip.dataset.tooltipKey;
+      if (localStorage.getItem(key)) {
+        tooltip.hidden = true;
+        return;
+      }
+      tooltip.querySelector("[data-tooltip-close]").addEventListener("click", () => {
+        localStorage.setItem(key, "true");
+        tooltip.hidden = true;
+      });
+    });
+  }
+
   function wireUp() {
+    wireFeatureTooltips();
+
     document.querySelectorAll(".filter-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         currentFilter = btn.dataset.filter;

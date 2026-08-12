@@ -24,7 +24,7 @@
   <section id="view-intro" class="view">
     <div class="card card--form">
       <h1>살까 말까?</h1>
-      <p class="muted">AI 판사가 당신의 소비를 재판합니다.</p>
+      <p class="intro-tagline">⚖️ AI 판사가 당신의 소비를 재판합니다 ⚖️</p>
 
       <ol class="onboarding-steps">
         <li><span class="onboarding-steps__num">1</span>사고 싶은 물건과 가격을 적어요</li>
@@ -142,18 +142,38 @@
           <span class="stat-card__label">총 재판 수</span>
           <span class="stat-card__value" id="statTotalCount">0건</span>
         </div>
+
+        <div class="feature-tooltip feature-tooltip--right" data-tooltip-key="sojuban.tooltip.stats.v1">
+          <button type="button" class="feature-tooltip__close" data-tooltip-close aria-label="닫기">×</button>
+          <p>누적 절약액, 무죄율, 총 재판 수를 한눈에 확인할 수 있어요</p>
+        </div>
+      </div>
+
+      <div class="category-stats" id="categoryStats" hidden>
+        <p class="category-stats__title">카테고리별 재판 건수</p>
+        <ul class="category-stats__list" id="categoryStatsList"></ul>
       </div>
 
       <div class="filter-row">
         <button class="filter-btn is-active" data-filter="all">전체</button>
         <button class="filter-btn" data-filter="무죄">무죄</button>
         <button class="filter-btn" data-filter="유죄">유죄</button>
+
+        <div class="feature-tooltip feature-tooltip--left" data-tooltip-key="sojuban.tooltip.filter.v1">
+          <button type="button" class="feature-tooltip__close" data-tooltip-close aria-label="닫기">×</button>
+          <p>무죄 또는 유죄 판결만 골라서 볼 수 있어요</p>
+        </div>
       </div>
 
-      <p class="muted history-hint">관심도가 높은 순서로 정렬됩니다. 항목에 마우스를 올리면 체크리스트/메모를 볼 수 있어요.</p>
+      <div class="history-list-wrap">
+        <div class="feature-tooltip feature-tooltip--right feature-tooltip--top" data-tooltip-key="sojuban.tooltip.list.v1">
+          <button type="button" class="feature-tooltip__close" data-tooltip-close aria-label="닫기">×</button>
+          <p>슬라이더로 관심도를 매기면 그 순서대로 정렬돼요. 항목을 누르면 체크리스트·메모도 남길 수 있어요.</p>
+        </div>
 
-      <ul id="historyList" class="history-list"></ul>
-      <p id="historyEmptyState" class="muted empty-state" hidden>아직 재판 기록이 없어요. 첫 재판을 시작해보세요!</p>
+        <ul id="historyList" class="history-list"></ul>
+        <p id="historyEmptyState" class="muted empty-state" hidden>아직 재판 기록이 없어요. 첫 재판을 시작해보세요!</p>
+      </div>
     </div>
   </section>
 
