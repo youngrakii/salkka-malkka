@@ -8,8 +8,6 @@
 !README.md
 !PRD.md
 !CLAUDE.md
-!api/
-!api/verdict.js
 
 # 민감 정보 (반드시 제외)
 .env

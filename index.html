@@ -150,6 +150,20 @@
   <div class="modal__panel">
     <h2>설정</h2>
 
+    <div class="warning-banner">
+      <strong>⚠️ 개인 실습용 보안 안내</strong>
+      <ul>
+        <li>API 키는 이 브라우저의 localStorage에만 저장되며, Anthropic API 서버로만 전송됩니다.</li>
+        <li>이 기기/브라우저에 접근 가능한 사람은 개발자 도구(DevTools)로 키를 볼 수 있습니다.</li>
+        <li>이 앱은 개인 실습 목적입니다. 이 키가 포함된 상태로 다른 사람에게 배포하거나 공개 호스팅하지 마세요.</li>
+      </ul>
+    </div>
+
+    <label class="field">
+      <span>Anthropic API 키</span>
+      <input type="password" id="apiKeyInput" placeholder="sk-ant-...">
+    </label>
+
     <label class="field">
       <span>모델</span>
       <select id="modelSelect">
@@ -159,6 +173,7 @@
     </label>
 
     <div class="modal__actions">
+      <button id="clearApiKeyBtn" class="btn btn--ghost">키 삭제</button>
       <button id="saveSettingsBtn" class="btn btn--primary">저장</button>
     </div>
   </div>

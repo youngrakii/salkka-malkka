@@ -777,6 +777,30 @@ h3 {
   gap: 10px;
 }
 
+.warning-banner {
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+  font-size: 0.82rem;
+  color: var(--color-muted);
+}
+
+.warning-banner strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--dash-watchlist);
+}
+
+.warning-banner ul {
+  list-style: disc;
+  padding-left: 18px;
+}
+
+.warning-banner li {
+  margin-top: 5px;
+}
+
 /* 공유 카드 내부 스타일 */
 .share-card {
   font-size: 20px;
