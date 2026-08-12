@@ -158,11 +158,6 @@ h3 {
   font-weight: 700;
   letter-spacing: -0.02em;
   transition: opacity 0.15s ease;
-  background: linear-gradient(120deg, #ffffff 0%, var(--color-accent) 55%, var(--dash-checklist) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
 }
 
 .app-header__logo:hover {
@@ -332,31 +327,13 @@ h3 {
   font-size: 1.9rem;
   font-weight: 700;
   margin-bottom: 8px;
-  background: linear-gradient(120deg, #ffffff 0%, #ffffff 55%, var(--color-accent) 130%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
 }
 
-/* 온보딩 화면 설명 문구 — 화려한 그라디언트 + 은은한 반짝임 애니메이션 */
+/* 온보딩 화면 설명 문구 */
 .intro-tagline {
   font-size: 1.15rem;
   font-weight: 700;
   letter-spacing: -0.01em;
-  background: linear-gradient(120deg, var(--color-accent) 0%, var(--dash-checklist) 35%, var(--dash-watchlist) 65%, var(--color-accent) 100%);
-  background-size: 250% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  animation: taglineShimmer 4s ease-in-out infinite;
-}
-
-@keyframes taglineShimmer {
-  0% { background-position: 0% center; }
-  50% { background-position: 100% center; }
-  100% { background-position: 0% center; }
 }
 
 /* 온보딩(첫 방문자 설명) 화면의 진행 순서 목록 */
@@ -611,6 +588,19 @@ h3 {
   margin-bottom: 8px;
 }
 
+/* 검사/변호인/절약 문구는 각자 입장에 맞는 색으로 구분한다 */
+.verdict-section--prosecution h3 {
+  color: var(--color-guilty);
+}
+
+.verdict-section--defense h3 {
+  color: var(--color-innocent);
+}
+
+.verdict-section--savings h3 {
+  color: var(--color-innocent);
+}
+
 .verdict-section p {
   white-space: pre-wrap;
 }
@@ -677,6 +667,14 @@ h3 {
   font-weight: 700;
   color: var(--dash-ink);
   overflow-wrap: break-word;
+}
+
+#statTotalSaved {
+  color: var(--dash-success);
+}
+
+#statTotalCount {
+  color: var(--dash-accent-blue);
 }
 
 /* 필터 버튼 (대시보드 다크 테마) */
@@ -1154,4 +1152,42 @@ textarea.dashboard-input {
   .history-item__interest-slider {
     width: 100%;
   }
+}
+
+/* ===== 텍스트 그라디언트 유틸리티 — 화려하게 강조하고 싶은 글씨에 재사용 =====
+   파일 맨 끝에 두어, 위쪽의 다른 규칙들이 같은 우선순위로 color를 다시
+   지정해도 그라디언트가 항상 이기도록 한다. */
+.text-gradient,
+.app-header__logo,
+.card--form h1,
+.persona-card__type,
+#resultItemName,
+.verdict-section--final h3,
+.category-stats__title,
+#statInnocenceRate {
+  background: linear-gradient(120deg, #ffffff 0%, var(--color-accent) 55%, var(--dash-checklist) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* 반짝이며 흐르는 버전 — 임팩트가 가장 큰 한 줄(팩폭 명언, 로딩 문구)에만 사용 */
+.text-gradient--vivid,
+.intro-tagline,
+#punchlineQuote,
+.trial-status {
+  background: linear-gradient(120deg, var(--color-accent) 0%, var(--dash-checklist) 35%, var(--dash-watchlist) 65%, var(--color-accent) 100%);
+  background-size: 250% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: gradientShimmer 4s ease-in-out infinite;
+}
+
+@keyframes gradientShimmer {
+  0% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+  100% { background-position: 0% center; }
 }
